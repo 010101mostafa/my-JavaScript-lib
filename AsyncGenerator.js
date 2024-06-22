@@ -1,26 +1,28 @@
 class MyAsyncGenerator{
-    constructor(callback){
-      this.res = ()=>{}
-      callback(this.nextFun,this.ReturnFun,this.errorFun);    
+  #res = ()=>({value:null,done:true})
+  #rej = (e)=>{throw e} 
+  constructor(callback){
+      const nextFun=(value)=>{
+          this.#res({value,done:false})
+        }
+      const ReturnFun=(value)=>{
+          this.#Returned = true;
+          this.#res({value,done:true})
+      }
+      const errorFun=(err)=>{
+          this.#rej(err)
+      } 
+      this.next();
+      callback(nextFun,ReturnFun,errorFun);    
     }
     [Symbol.asyncIterator]() {
-      return this
+      return this;
     }
-    Returned = false;
+    #Returned = false;
     next() {
-        if(this.Returned)
+        if(this.#Returned)
           return {dome:true};
-        return new Promise((res,rej)=>{this.res= res,this.rej = rej})
-    }
-    nextFun=(value)=>{
-        this.res({value,done:false})
-    }
-    ReturnFun=(value)=>{
-        this.Returned = true;
-        this.res({value,done:true})
-    }
-    errorFun=(err)=>{
-        this.rej(err)
+        return new Promise((res,rej)=>{this.#res= res,this.#rej = rej})
     }
   }
    function interval(While,everyMs){
@@ -39,9 +41,8 @@ class MyAsyncGenerator{
 const ff = async () => {
     let x = 3;
     const int = interval(()=>x--,1000)
-    int.next()
-    int.next()
-    int.next()
+    const n = await int.next();
+    n.next();
     for await (const iterator of int) {
       console.log(iterator)
     } 
